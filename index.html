@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSDTech — Padrões e Patterns</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --bg3: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #3fb950;
+    --accent3: #d2a8ff;
+    --orange: #d29922;
+    --red: #f85149;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+    --mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    --sidebar-w: 280px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+    display: flex;
+    min-height: 100vh;
+  }
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-header h1 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+  .sidebar-header span {
+    display: block;
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .sidebar-search { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .sidebar-search input {
+    width: 100%;
+    padding: 7px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    transition: border .2s;
+  }
+  .sidebar-search input:focus { border-color: var(--accent); }
+  .sidebar-search input::placeholder { color: var(--text2); }
+  .sidebar-nav { padding: 8px 0; flex: 1; }
+  .nav-group {
+    padding: 12px 20px 4px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text2);
+    font-weight: 600;
+  }
+  .nav-item {
+    display: block;
+    padding: 6px 20px;
+    color: var(--text2);
+    text-decoration: none;
+    font-size: 13px;
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    transition: all .15s;
+  }
+  .nav-item:hover { color: var(--text); background: var(--bg3); }
+  .nav-item.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(88,166,255,.08);
+  }
+  .nav-item .icon { display: inline-block; width: 18px; text-align: center; margin-right: 6px; }
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    max-width: 960px;
+    padding: 48px 56px 80px;
+  }
+  @media (max-width: 768px) {
+    .sidebar { width: 100%; height: auto; position: relative; border-right: none; border-bottom: 1px solid var(--border); }
+    .main { margin-left: 0; padding: 24px 20px 60px; }
+    .content h1 { font-size: 22px; }
+    .content h2 { font-size: 17px; }
+    .content table { font-size: 13px; }
+  }
+  .content.hidden { display: none; }
+  .content h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .content h2 { font-size: 20px; font-weight: 600; margin: 32px 0 12px; color: var(--accent); }
+  .content h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; }
+  .content h4 { font-size: 14px; font-weight: 600; margin: 16px 0 6px; color: var(--text2); }
+  .content p { margin-bottom: 16px; }
+  .content strong { color: var(--text); }
+  .content ul, .content ol { margin: 0 0 16px 24px; }
+  .content li { margin-bottom: 4px; }
+  .content code {
+    font-family: var(--mono);
+    font-size: 13px;
+    background: var(--bg3);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent3);
+  }
+  .content pre {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 0 0 16px;
+    overflow-x: auto;
+  }
+  .content pre code { background: none; padding: 0; color: var(--text); font-size: 13px; line-height: 1.6; }
+  .content table { width: 100%; border-collapse: collapse; margin: 0 0 16px; font-size: 14px; }
+  .content th {
+    background: var(--bg2);
+    text-align: left;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    font-weight: 600;
+    color: var(--text2);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .content td { padding: 10px 14px; border: 1px solid var(--border); }
+  .content tr:hover td { background: rgba(255,255,255,.02); }
+  .content blockquote {
+    margin: 0 0 16px;
+    padding: 12px 16px;
+    border-left: 3px solid var(--accent);
+    background: rgba(88,166,255,.06);
+    border-radius: 0 6px 6px 0;
+  }
+  .content blockquote p { margin: 0; }
+  .content hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+  .content input[type="checkbox"] { margin-right: 6px; accent-color: var(--accent2); }
+  .sidebar::-webkit-scrollbar { width: 6px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .hero { text-align: center; padding: 60px 0 40px; }
+  .hero h1 { font-size: 36px; font-weight: 800; border: none; padding: 0; margin-bottom: 12px; letter-spacing: -1px; }
+  .hero .sub { color: var(--text2); font-size: 16px; max-width: 480px; margin: 0 auto 32px; }
+  .hero-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; text-align: left; max-width: 680px; margin: 0 auto; }
+  .hero-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    text-decoration: none;
+    color: var(--text);
+    transition: all .2s;
+    cursor: pointer;
+  }
+  .hero-card:hover { border-color: var(--accent); background: var(--bg3); transform: translateY(-1px); }
+  .hero-card .emoji { font-size: 20px; margin-bottom: 6px; display: block; }
+  .hero-card .title { font-weight: 600; font-size: 14px; }
+  .hero-card .desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<nav class="sidebar" role="navigation">
+  <div class="sidebar-header">
+    <h1>TSDTech Patterns</h1>
+    <span>Padrões e Referências</span>
+  </div>
+  <div class="sidebar-search">
+    <input type="text" id="searchInput" placeholder="Buscar..." oninput="filterNav()">
+  </div>
+  <div class="sidebar-nav" id="sidebarNav">
+    <div class="nav-group">Visão Geral</div>
+    <a class="nav-item active" data-page="product" onclick="showPage('product')"><span class="icon">📌</span> Product Overview</a>
+    <a class="nav-item" data-page="tech" onclick="showPage('tech')"><span class="icon">⚙️</span> Tech Stack</a>
+    <div class="nav-group">Arquitetura</div>
+    <a class="nav-item" data-page="structure" onclick="showPage('structure')"><span class="icon">📁</span> Project Structure</a>
+    <a class="nav-item" data-page="api-standards" onclick="showPage('api-standards')"><span class="icon">🌐</span> API Standards</a>
+    <a class="nav-item" data-page="database" onclick="showPage('database')"><span class="icon">🗄️</span> Database</a>
+    <div class="nav-group">Segurança</div>
+    <a class="nav-item" data-page="authentication" onclick="showPage('authentication')"><span class="icon">🔑</span> Auth & Authorization</a>
+    <a class="nav-item" data-page="security" onclick="showPage('security')"><span class="icon">🛡️</span> Security</a>
+    <a class="nav-item" data-page="error-handling" onclick="showPage('error-handling')"><span class="icon">⚠️</span> Error Handling</a>
+    <div class="nav-group">Qualidade</div>
+    <a class="nav-item" data-page="testing" onclick="showPage('testing')"><span class="icon">🧪</span> Testing</a>
+    <a class="nav-item" data-page="deployment" onclick="showPage('deployment')"><span class="icon">🚀</span> Deployment</a>
+    <div class="nav-group">Implementação</div>
+    <a class="nav-item" data-page="code-patterns" onclick="showPage('code-patterns')"><span class="icon">💻</span> Code Patterns</a>
+  </div>
+</nav>
+
+<main class="main" id="mainContent">
+
+<section class="content" id="page-home">
+  <div class="hero">
+    <h1>TSDTech Patterns</h1>
+    <p class="sub">Padrões de desenvolvimento, arquitetura e boas práticas do ecossistema TSDTech.</p>
+    <div class="hero-grid">
+      <div class="hero-card" onclick="showPage('product')">
+        <span class="emoji">📌</span>
+        <div class="title">Product Overview</div>
+        <div class="desc">Visão Geral</div>
+      </div>
+      <div class="hero-card" onclick="showPage('tech')">
+        <span class="emoji">⚙️</span>
+        <div class="title">Tech Stack</div>
+        <div class="desc">Visão Geral</div>
+      </div>
+      <div class="hero-card" onclick="showPage('structure')">
+        <span class="emoji">📁</span>
+        <div class="title">Project Structure</div>
+        <div class="desc">Arquitetura</div>
+      </div>
+      <div class="hero-card" onclick="showPage('api-standards')">
+        <span class="emoji">🌐</span>
+        <div class="title">API Standards</div>
+        <div class="desc">Arquitetura</div>
+      </div>
+      <div class="hero-card" onclick="showPage('database')">
+        <span class="emoji">🗄️</span>
+        <div class="title">Database</div>
+        <div class="desc">Arquitetura</div>
+      </div>
+      <div class="hero-card" onclick="showPage('authentication')">
+        <span class="emoji">🔑</span>
+        <div class="title">Auth & Authorization</div>
+        <div class="desc">Segurança</div>
+      </div>
+      <div class="hero-card" onclick="showPage('security')">
+        <span class="emoji">🛡️</span>
+        <div class="title">Security</div>
+        <div class="desc">Segurança</div>
+      </div>
+      <div class="hero-card" onclick="showPage('error-handling')">
+        <span class="emoji">⚠️</span>
+        <div class="title">Error Handling</div>
+        <div class="desc">Segurança</div>
+      </div>
+      <div class="hero-card" onclick="showPage('testing')">
+        <span class="emoji">🧪</span>
+        <div class="title">Testing</div>
+        <div class="desc">Qualidade</div>
+      </div>
+      <div class="hero-card" onclick="showPage('deployment')">
+        <span class="emoji">🚀</span>
+        <div class="title">Deployment</div>
+        <div class="desc">Qualidade</div>
+      </div>
+      <div class="hero-card" onclick="showPage('code-patterns')">
+        <span class="emoji">💻</span>
+        <div class="title">Code Patterns</div>
+        <div class="desc">Implementação</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content" id="page-product">
+<h1>TSDTech — Product Overview</h1>
+<p>Sistema de fintech/banking para transferência veicular. Atua como camada de abstração entre um banco (Pinbank) e serviços de domínio, rodando em microsserviços NestJS no GCP.</p>
+<h2>Core Capabilities</h2>
+<ul>
+<li><strong>Pagamentos PIX</strong> — QR Code, devoluções, splits</li>
+<li><strong>Conta Digital</strong> — PF/PJ, saldo, extrato via Pinbank</li>
+<li><strong>Subcontas e Ledger</strong> — saldo duplo (pending + settled), auditoria por ledger entries</li>
+<li><strong>Transferência Veicular</strong> — integração com Detran</li>
+<li><strong>Billing e Report</strong> — faturamento e conciliação</li>
+</ul>
+<h2>Target Use Cases</h2>
+<ul>
+<li>Fintechs que precisam de infra bancária white-label</li>
+<li>Transferência de veículos com pagamento integrado</li>
+<li>Operações de depósito, saque e split de valores</li>
+</ul>
+<h2>Value Proposition</h2>
+<ul>
+<li><strong>Ledger de auditoria próprio</strong> (NÃO double-entry — modelo PENDING→SETTLED com reversão)</li>
+<li><strong>Saldo duplo</strong> — <code>pendingBalance</code> (pendente) + <code>balance</code> (liquidade) para evitar saldo negativo</li>
+<li><strong>Encrypted-first</strong> — endpoints criptografados por padrão no bus layer</li>
+<li><strong>DDD Anêmico</strong> — separação rígida Controller → Service → DAO/Repository → Entity</li>
+</ul>
+
+</section>
+
+<section class="content hidden" id="page-tech">
+<h1>TSDTech — Technology Stack</h1>
+<h2>Architecture</h2>
+<p>Microsserviços com DDD Anêmico no padrão NestJS modular. Bus layer abstrai banco (Pinbank); domain services contêm regras de negócio. Comunicação assíncrona via GCP Pub/Sub.</p>
+<h2>Core Technologies</h2>
+<ul>
+<li><strong>Language</strong>: TypeScript (strict mode)</li>
+<li><strong>Framework</strong>: NestJS</li>
+<li><strong>Runtime</strong>: Node.js 20+</li>
+<li><strong>Precisão Financeira</strong>: Decimal.js (nunca <code>number</code> para valores monetários)</li>
+</ul>
+<h2>Databases</h2>
+<table>
+<thead>
+<tr>
+<th>Serviço</th>
+<th>Banco</th>
+<th>Base Class</th>
+<th>Serialização</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Bus (pinbank-bus, banking)</td>
+<td>Firestore</td>
+<td><code>BaseDao&lt;T&gt;</code></td>
+<td><code>SerializeUtils.serializer</code></td>
+</tr>
+<tr>
+<td>Banking (ms-banking)</td>
+<td>Firestore + AES</td>
+<td><code>BaseDao&lt;T&gt;</code> (com crypto)</td>
+<td><code>SerializeUtils.serializer</code></td>
+</tr>
+<tr>
+<td>Domain (subaccount, report)</td>
+<td>PostgreSQL</td>
+<td><code>BaseRepository&lt;T, F&gt;</code> (Knex)</td>
+<td><code>DefaultSerializer</code></td>
+</tr>
+<tr>
+<td>Cache</td>
+<td>Redis</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody></table>
+<h2>Key Libraries</h2>
+<ul>
+<li><strong>Serialization</strong>: <code>typescript-json-serializer</code> (@JsonObject, @JsonProperty)</li>
+<li><strong>Validation</strong>: <code>class-validator</code> + <code>class-transformer</code></li>
+<li><strong>API Docs</strong>: <code>@nestjs/swagger</code> (@ApiProperty, @ApiResponse)</li>
+<li><strong>ORM</strong>: Knex.js (PostgreSQL), <code>@google-cloud/firestore</code> (Firestore)</li>
+<li><strong>Queue</strong>: <code>@google-cloud/pubsub</code></li>
+<li><strong>Encryption</strong>: AES (dados bancários em repouso)</li>
+<li><strong>Testing</strong>: Jest</li>
+</ul>
+<h2>Development Standards</h2>
+<h3>Type Safety</h3>
+<ul>
+<li>TypeScript strict mode</li>
+<li><code>noImplicitAny</code>, <code>strictNullChecks</code></li>
+<li>Proibido <code>any</code> — usar <code>unknown</code> se necessário</li>
+</ul>
+<h3>Code Quality</h3>
+<ul>
+<li>ESLint + Prettier</li>
+<li>PascalCase para classes e arquivos de módulo</li>
+<li>kebab-case para arquivos de serviço/DAO</li>
+</ul>
+<h3>Testing</h3>
+<ul>
+<li>Jest com cobertura mínima 80%</li>
+<li>Testes unitários para Services (lógica de negócio)</li>
+<li>Testes de integração para fluxos críticos</li>
+</ul>
+<h2>Development Environment</h2>
+<h3>Required Tools</h3>
+<ul>
+<li>Node.js 20+</li>
+<li>npm/yarn</li>
+<li>GCP CLI (gcloud) para emuladores</li>
+<li>Ollama (para tooling local)</li>
+</ul>
+<h3>Common Commands</h3>
+<pre><code class="language-bash"># Dev
+npm run start:dev
+
+# Test
+npm test
+
+# Lint
+npm run lint
+
+# Build
+npm run build
+</code></pre>
+<h2>Key Technical Decisions</h2>
+<ol>
+<li><strong>Ledger NÃO é double-entry</strong> — modelo próprio com estágios PENDING→SETTLED e <code>reversalOfLedgerEntryId</code> para compensação</li>
+<li><strong>Valores em centavos na API</strong> — input/output em centavos (integer), conversão para Decimal internamente</li>
+<li><strong>Endpoints criptografados por padrão</strong> — <code>@PinbankProtected()</code> com encryption: true no bus layer</li>
+<li><strong>Múltiplos guards em cadeia</strong> — MasterAuth → AgentAuth → C2cAuth → GcpAuth → MsAuth</li>
+</ol>
+
+</section>
+
+
+<section class="content hidden" id="page-structure">
+<h1>TSDTech — Project Structure</h1>
+<h2>Organization Philosophy</h2>
+<p>DDD com camadas isoladas. Cada feature é um bounded context dentro de <code>modules/api/</code>. Separação rígida: Controller (thin) → Service (business logic) → DAO/Repository (data access) → Entity (domain model). NUNCA cruzar camadas.</p>
+<h2>Directory Patterns</h2>
+<pre><code>src/
+├── index.ts                  # Bootstrap (NestFactory, global pipes/guards/interceptors)
+├── main.ts                   # Entry point
+├── core/                     # Shared infrastructure
+│   ├── base/                 # Base classes (BaseDao, BaseRepository, BaseClient, PubSubBaseService)
+│   │   ├── base.dao.ts       # Firestore generic DAO
+│   │   ├── base.repository.ts # Knex generic repository
+│   │   ├── base.client.ts    # HTTP client base
+│   │   └── pubsub/           # GCP Pub/Sub integration
+│   ├── constants/            # App-wide constants (port, env vars)
+│   ├── decorators/           # Custom decorators (@KnexDBDate, @KnexDBBool, @DecimalJsonSerializer)
+│   ├── dtos/                 # Shared DTOs (PaginationDto, PaginatedListDto)
+│   ├── entities/             # Base entities (ImmutableEntity, MutableEntity)
+│   ├── error/                # HTTPError, ErrorFilter, DatabaseError
+│   ├── guards/               # Auth guards (C2cAuth, MsAuth, AgentAuth, GcpAuth, MasterAuth)
+│   ├── interceptors/         # Global interceptors (UnixTimestamp, ClassSerializer)
+│   ├── interfaces/           # Shared interfaces
+│   ├── serializer/           # DefaultSerializer wrapper
+│   ├── services/             # Shared services (Redis, cache)
+│   └── utils/                # Utilities (Swagger, Firestore, SerializeUtils)
+└── modules/                  # Domain / feature modules
+    ├── app.module.ts         # Root AppModule
+    ├── api/                  # API feature modules
+    │   ├── api.module.ts
+    │   └── &lt;feature&gt;/        # Each bounded context
+    │       ├── controllers/
+    │       ├── daos/         # ou repositories/ (Knex)
+    │       ├── dto/
+    │       ├── entities/
+    │       ├── &lt;feature&gt;.service.ts
+    │       └── &lt;feature&gt;.module.ts
+    ├── clients/              # External API clients
+    └── webhooks/             # Webhook handlers
+</code></pre>
+<h3>Feature Module Pattern</h3>
+<p><strong>Location</strong>: <code>src/modules/api/&lt;feature&gt;/</code><br><strong>Purpose</strong>: Cada feature autocontida com seu controller, service, DAO, entidades, DTOs<br><strong>Exports</strong>: Service + DAO para outros módulos consumirem</p>
+<h3>Core Layer Pattern</h3>
+<p><strong>Location</strong>: <code>src/core/</code><br><strong>Purpose</strong>: Infraestrutura compartilhada (não colocar lógica de negócio aqui)<br><strong>Includes</strong>: Base classes, decorators, guards, interceptors, error handling</p>
+<h2>Layer Rules (DDD Anêmico)</h2>
+<table>
+<thead>
+<tr>
+<th>Camada</th>
+<th>O que faz</th>
+<th>O que NÃO faz</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Controller</strong></td>
+<td>Recebe HTTP, valida DTO, delega ao Service</td>
+<td>NÃO contém regras de negócio, NÃO acessa DAO direto</td>
+</tr>
+<tr>
+<td><strong>Service</strong></td>
+<td>Toda regra de negócio, orquestração, transformação DTO↔Entity</td>
+<td>NÃO conhece HTTP (sem @Body, @Param)</td>
+</tr>
+<tr>
+<td><strong>DAO/Repository</strong></td>
+<td>CRUD puro, queries específicas do banco</td>
+<td>NÃO tem lógica de negócio, NÃO valida</td>
+</tr>
+<tr>
+<td><strong>Entity</strong></td>
+<td>Modelo de domínio com decorators de serialização</td>
+<td>NÃO tem lógica de persistência, NÃO importa DAO</td>
+</tr>
+<tr>
+<td><strong>DTO</strong></td>
+<td>Shape de input/output da API, validação com class-validator</td>
+<td>NÃO estende Entity, NÃO tem @JsonObject</td>
+</tr>
+</tbody></table>
+<h2>Naming Conventions</h2>
+<ul>
+<li><strong>Files (classes/entities)</strong>: PascalCase — <code>MyEntity.ts</code>, <code>MyFeatureService.ts</code></li>
+<li><strong>Files (utilities)</strong>: kebab-case — <code>base.dao.ts</code>, <code>http-error.ts</code></li>
+<li><strong>Components</strong>: PascalCase — <code>MyFeatureController</code>, <code>MyEntityDao</code></li>
+<li><strong>Methods/Functions</strong>: camelCase — <code>create()</code>, <code>findAll()</code></li>
+<li><strong>Firestore collections</strong>: snake_case, plural — <code>my_entities</code>, <code>deposit_requests</code></li>
+<li><strong>PostgreSQL tables</strong>: snake_case, plural — <code>subaccount_holders</code>, <code>ledger_entries</code></li>
+</ul>
+<h2>Module Wiring</h2>
+<pre><code class="language-typescript">@Module({
+  imports: [DependencyModule],
+  controllers: [FeatureController],
+  providers: [FeatureService, FeatureDao],
+  exports: [FeatureService, FeatureDao],
+})
+export class FeatureModule {}
+</code></pre>
+<p>Regras:</p>
+<ul>
+<li>Sempre exportar providers que outros módulos precisam</li>
+<li>Importar módulos, não providers direto</li>
+<li>Evitar imports circulares — <code>forwardRef()</code> como último recurso</li>
+<li>DAOs/Repositories ficam na feature, não em <code>core/</code></li>
+</ul>
+
+</section>
+
+<section class="content hidden" id="page-api-standards">
+<h1>TSDTech — API Standards</h1>
+<h2>Philosophy</h2>
+<ul>
+<li>Resource-oriented design com DTOs explícitos</li>
+<li>Valores financeiros em centavos na API, Decimal internamente</li>
+<li>Endpoints criptografados por padrão no bus layer</li>
+<li>Documentação via Swagger (@ApiProperty, @ApiResponse)</li>
+</ul>
+<h2>Endpoint Pattern</h2>
+<pre><code>POST /{resource}/{Action}         # Ex: POST /PagamentoPixQrCode/Create
+</code></pre>
+<p>Naming:</p>
+<ul>
+<li>Ações em PascalCase: <code>Create</code>, <code>Get</code>, <code>Update</code>, <code>List</code></li>
+<li>Recurso nomeado como entidade: <code>PagamentoPixQrCode</code>, <code>SubaccountHolder</code></li>
+</ul>
+<h2>Request/Response</h2>
+<h3>Request DTO — class-validator + Swagger</h3>
+<pre><code class="language-typescript">export class CreateDepositDto {
+  @ApiProperty({ description: &#39;Valor em centavos&#39; })
+  @IsNotEmpty()
+  @IsNumber()
+  amount: number;  // cents!
+}
+</code></pre>
+<h3>Success Response</h3>
+<pre><code class="language-typescript">@ApiResponse({ type: MyEntityResponseDto })
+async create(@Body() dto: CreateMyEntityDto): Promise&lt;MyEntityResponseDto&gt;
+</code></pre>
+<h3>Error Response</h3>
+<pre><code class="language-json">{
+  &quot;error&quot;: {
+    &quot;code&quot;: &quot;NOT_FOUND&quot;,
+    &quot;message&quot;: &quot;Entity not found&quot;,
+    &quot;requestId&quot;: &quot;trace-id&quot;,
+    &quot;timestamp&quot;: &quot;2026-04-20T10:00:00.000Z&quot;
+  }
+}
+</code></pre>
+<h2>Financial Values (CENTS ↔ DECIMAL)</h2>
+<p>Regra de ouro:</p>
+<table>
+<thead>
+<tr>
+<th>Momento</th>
+<th>Formato</th>
+<th>Biblioteca</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Input da API</td>
+<td>centavos (<code>number</code>)</td>
+<td>class-validator</td>
+</tr>
+<tr>
+<td>Interno (service)</td>
+<td><code>Decimal</code></td>
+<td><code>decimal.js</code></td>
+</tr>
+<tr>
+<td>Persistência</td>
+<td><code>Decimal</code></td>
+<td><code>@DecimalJsonSerializer()</code></td>
+</tr>
+<tr>
+<td>Output da API</td>
+<td>centavos (<code>number</code>)</td>
+<td>service converte</td>
+</tr>
+</tbody></table>
+<pre><code class="language-typescript">// Entrada: centavos → Decimal
+const amount = new Decimal(dto.amount).div(100);
+
+// Saída: Decimal → centavos
+const cents = entity.amount.times(100).toNumber();
+</code></pre>
+<h2>Status Codes</h2>
+<ul>
+<li><code>201</code> — Created (POST)</li>
+<li><code>200</code> — Success (GET, PUT, PATCH)</li>
+<li><code>204</code> — No Content (DELETE)</li>
+<li><code>400</code> — Bad Request (validação)</li>
+<li><code>401</code> — Unauthorized</li>
+<li><code>403</code> — Forbidden</li>
+<li><code>404</code> — Not Found</li>
+<li><code>409</code> — Conflict (estado inválido)</li>
+<li><code>412</code> — Failed Precondition</li>
+<li><code>500</code> — Internal Server Error</li>
+</ul>
+<h2>Encrypted Endpoints</h2>
+<p>No bus layer (ms-pinbank-bus), cada ação tem duas variantes:</p>
+<pre><code class="language-typescript">@Post(&#39;ActionNameEncrypted&#39;)
+@PinbankProtected()                      // encrypted: true (default)
+
+@Post(&#39;ActionName&#39;)
+@PinbankProtected({ encrypted: false })  // plain
+</code></pre>
+<p>Ambas chamam o mesmo service method.</p>
+<h2>Swagger Conventions</h2>
+<ul>
+<li><code>@ApiTags(&#39;FeatureName&#39;)</code> no controller</li>
+<li><code>@ApiResponse({ type: ResponseDto })</code> em cada endpoint</li>
+<li><code>@ApiProperty({ description: &#39;...&#39; })</code> em cada campo do DTO</li>
+<li>Endpoints de health não precisam de auth nem Swagger elaborado</li>
+</ul>
+
+</section>
+
+<section class="content hidden" id="page-database">
+<h1>TSDTech — Database Standards</h1>
+<h2>Philosophy</h2>
+<ul>
+<li>DAO/Repository = pure data access, zero business logic</li>
+<li>Firestore para bus/banking (document store), PostgreSQL para domínio (relacional)</li>
+<li>AES encryption para dados bancários sensíveis no Firestore</li>
+</ul>
+<h2>Database per Service</h2>
+<table>
+<thead>
+<tr>
+<th>Serviço</th>
+<th>Database</th>
+<th>Base Class</th>
+<th>Collection/Table Pattern</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ms-pinbank-bus</td>
+<td>Firestore</td>
+<td><code>BaseDao&lt;T&gt;</code></td>
+<td><code>snake_case</code>, plural: <code>pagamento_pix_qr_code</code></td>
+</tr>
+<tr>
+<td>ms-banking</td>
+<td>Firestore + AES</td>
+<td><code>BaseDao&lt;T&gt;</code> (crypto)</td>
+<td><code>snake_case</code>, plural</td>
+</tr>
+<tr>
+<td>ms-subaccount</td>
+<td>PostgreSQL</td>
+<td><code>BaseRepository&lt;T, F&gt;</code> (Knex)</td>
+<td><code>snake_case</code>, plural: <code>subaccount_holders</code></td>
+</tr>
+<tr>
+<td>ms-report</td>
+<td>PostgreSQL</td>
+<td><code>BaseRepository&lt;T, F&gt;</code> (Knex)</td>
+<td><code>snake_case</code>, plural</td>
+</tr>
+</tbody></table>
+<h2>Firestore DAO Pattern</h2>
+<pre><code class="language-typescript">@Injectable()
+export class MyEntityDao extends BaseDao&lt;MyEntity&gt; {
+  protected collectionName = &#39;my_entities&#39;;
+  constructor(@Inject(Firestore) protected readonly firestore: Firestore) {
+    super(firestore, MyEntity);
+  }
+}
+</code></pre>
+<h2>Knex Repository Pattern</h2>
+<pre><code class="language-typescript">interface MyFilter { ids?: string[]; status?: string; }
+
+@Injectable()
+export class MyRepository extends BaseRepository&lt;MyEntity, MyFilter&gt; {
+  protected tableName = &#39;my_entities&#39;;
+  constructor(protected readonly knex: Knex) { super(knex, MyEntity); }
+
+  findBy(query: Knex.QueryBuilder, filters?: MyFilter): void {
+    if (filters?.status) query.where(&#39;status&#39;, filters.status);
+  }
+}
+</code></pre>
+<h2>Naming</h2>
+<ul>
+<li>Collections/Tables: <code>snake_case</code>, plural (<code>subaccount_holders</code>, <code>deposit_requests</code>)</li>
+<li>FK columns: <code>{table}_id</code> (<code>subaccount_id</code>)</li>
+<li>Timestamps: <code>created_at_utc</code>, <code>updated_at_utc</code> (timezone-aware)</li>
+</ul>
+<h2>Entity Decorators</h2>
+<pre><code class="language-typescript">// Firestore
+@JsonObject()
+export class MyEntity extends MutableEntity {
+  @JsonProperty() field: string;
+  @DecimalJsonSerializer() amount: Decimal;
+}
+
+// PostgreSQL
+@JsonObject()
+export class MyEntity extends MutableEntity {
+  @JsonProperty({ name: &#39;column_name&#39; }) field: string;
+  @KnexDBDate({ name: &#39;due_date&#39; }) dueDate: Date;
+  @KnexDBBool({ name: &#39;is_active&#39; }) isActive: boolean;
+}
+</code></pre>
+<h2>Serialization</h2>
+<table>
+<thead>
+<tr>
+<th>Database</th>
+<th>Serializer</th>
+<th>Methods</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Firestore</td>
+<td><code>SerializeUtils.serializer</code></td>
+<td><code>serializeObject()</code>, <code>deserializeObject()</code></td>
+</tr>
+<tr>
+<td>PostgreSQL</td>
+<td><code>DefaultSerializer</code></td>
+<td><code>serializeObject()</code>, <code>deserializeObjectArray()</code></td>
+</tr>
+</tbody></table>
+<h2>Data Integrity</h2>
+<ul>
+<li>NOT NULL, UNIQUE, FK constraints no PostgreSQL</li>
+<li>IdempotencyKey em entidades de operação (deposit, withdrawal)</li>
+<li>Ledger entries são imutáveis — nunca atualizar, apenas criar reversões</li>
+<li>Preferir <code>ImmutableEntity</code> para registros de auditoria</li>
+</ul>
+
+</section>
+
+<section class="content hidden" id="page-authentication">
+<h1>TSDTech — Authentication &amp; Authorization Standards</h1>
+<h2>Philosophy</h2>
+<ul>
+<li>Guards em cadeia (chain of responsibility)</li>
+<li>Secure by default — múltiplas camadas de auth</li>
+<li><code>@PinbankProtected()</code> como decorator unificado</li>
+</ul>
+<h2>Auth Chain (ordem de execução)</h2>
+<pre><code>Incoming Request
+  → MasterAuthGuard (admin master)
+  → AgentAuthGuard (agente/serviço)
+  → C2cAuthGuard (client-to-client)
+  → GcpAuthGuard (auth interna GCP)
+  → MsAuthGuard (microserviço-to-microserviço)
+  → @PinbankProtected()
+</code></pre>
+<h2>PinbankProtected Decorator</h2>
+<pre><code class="language-typescript">@Post(&#39;CreateEncrypted&#39;)
+@PinbankProtected()                      // encrypted: true (default)
+async create(@Body() dto: DTO) { }
+
+@Post(&#39;Create&#39;)
+@PinbankProtected({ encrypted: false })  // plain
+async createUnencrypted(@Body() dto: DTO) { }
+</code></pre>
+<h2>Endpoint Security Rules</h2>
+<table>
+<thead>
+<tr>
+<th>Tipo de Endpoint</th>
+<th>Auth</th>
+<th>Exemplo</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Health/Readiness</td>
+<td>Sem auth</td>
+<td><code>/health</code>, <code>/health/ready</code></td>
+</tr>
+<tr>
+<td>API pública</td>
+<td>MasterAuth + MsAuth</td>
+<td>Endpoints de consulta</td>
+</tr>
+<tr>
+<td>API interna (bus)</td>
+<td><code>@PinbankProtected()</code></td>
+<td>CRUD de operações</td>
+</tr>
+<tr>
+<td>Webhooks</td>
+<td>GcpAuth</td>
+<td>Callbacks do Pinbank</td>
+</tr>
+</tbody></table>
+<h2>API-to-API Auth</h2>
+<ul>
+<li>Microserviços se autenticam via <code>MsAuthGuard</code></li>
+<li>GCP internals via <code>GcpAuthGuard</code></li>
+<li>Tokens com escopo mínimo por serviço</li>
+</ul>
+
+</section>
+
+<section class="content hidden" id="page-security">
+<h1>TSDTech — Security Standards</h1>
+<h2>Philosophy</h2>
+<ul>
+<li>Defense in depth: múltiplos guards em cadeia</li>
+<li>AES encryption para dados bancários em repouso</li>
+<li>Endpoints criptografados por padrão no bus layer</li>
+<li>Fail closed — negar por padrão, permitir explicitamente</li>
+</ul>
+<h2>Encryption</h2>
+<h3>Dados em Repouso (ms-banking)</h3>
+<ul>
+<li>AES encryption para dados bancários sensíveis</li>
+<li>Transparente via <code>BaseDao&lt;T&gt;</code> com crypto wrapper</li>
+<li>Decrypt automático na leitura</li>
+</ul>
+<h3>Dados em Trânsito (Bus Layer)</h3>
+<ul>
+<li><code>@PinbankProtected()</code> com payload criptografado</li>
+<li><code>{ encrypted: false }</code> apenas quando explicitamente necessário</li>
+<li>Ambos os endpoints chamam o mesmo service</li>
+</ul>
+<h2>Authentication &amp; Authorization</h2>
+<p>Chain obrigatória de guards:</p>
+<pre><code>MasterAuth → AgentAuth → C2cAuth → GcpAuth → MsAuth → @PinbankProtected
+</code></pre>
+<p>Nenhum endpoint (exceto health) deve ignorar a chain.</p>
+<h2>Secrets &amp; Configuration</h2>
+<ul>
+<li>NUNCA commitar secrets</li>
+<li>Usar variáveis de ambiente + GCP Secret Manager</li>
+<li>Validar env vars obrigatórias no startup (fail fast)</li>
+<li>AES keys gerenciadas externamente (não no código)</li>
+</ul>
+<h2>Sensitive Data</h2>
+<ul>
+<li>Valores financeiros em centavos na API (nunca expor Decimal raw)</li>
+<li>Logs: nunca logar tokens, senhas, secrets, PII completo</li>
+<li><code>requestId</code> para correlação sem expor dados sensíveis</li>
+</ul>
+<h2>Security Headers</h2>
+<ul>
+<li>Helmet habilitado em produção</li>
+<li>Swagger desabilitado em produção</li>
+<li>CORS configurado por ambiente</li>
+<li>HSTS em produção</li>
+</ul>
+<h2>Input Validation</h2>
+<ul>
+<li><code>class-validator</code> em todos os DTOs</li>
+<li>Validação global via ValidationPipe do NestJS</li>
+<li>Sanitização na camada de boundary (controller)</li>
+</ul>
+
+</section>
+
+<section class="content hidden" id="page-error-handling">
+<h1>TSDTech — Error Handling Standards</h1>
+<h2>Philosophy</h2>
+<ul>
+<li>Erros de negócio próximos à origem; erros inesperados para handler global</li>
+<li>Formato consistente em toda a stack</li>
+<li>HTTPError via métodos estáticos para erros de negócio</li>
+</ul>
+<h2>Error Shape</h2>
+<pre><code class="language-json">{
+  &quot;error&quot;: {
+    &quot;code&quot;: &quot;ERROR_CODE&quot;,
+    &quot;message&quot;: &quot;Human-readable message&quot;,
+    &quot;requestId&quot;: &quot;trace-id&quot;,
+    &quot;timestamp&quot;: &quot;ISO-8601&quot;
+  }
+}
+</code></pre>
+<h2>Propagation Pattern</h2>
+<h3>Service → HTTPError</h3>
+<pre><code class="language-typescript">throw HTTPError.NOT_FOUND({ message: &#39;Entity not found&#39;, title: &#39;Not Found&#39; });
+throw HTTPError.FAILED_PRECONDITION({ message: &#39;Invalid state&#39;, title: &#39;Error&#39; });
+throw HTTPError.BAD_REQUEST({ message: &#39;Invalid input&#39;, title: &#39;Validation Error&#39; });
+</code></pre>
+<h3>Global ErrorFilter</h3>
+<ul>
+<li>Captura erros não tratados</li>
+<li>Retorna 500 + corpo canônico</li>
+<li>Loga stack trace e requestId</li>
+</ul>
+<h2>Classification</h2>
+<table>
+<thead>
+<tr>
+<th>Categoria</th>
+<th>HTTP</th>
+<th>Exemplo</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Client (validação)</td>
+<td>400</td>
+<td>DTO inválido</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>401/403</td>
+<td>Token ausente/insuficiente</td>
+</tr>
+<tr>
+<td>Not Found</td>
+<td>404</td>
+<td>Entidade não existe</td>
+</tr>
+<tr>
+<td>Conflict</td>
+<td>409</td>
+<td>Estado inválido para ação</td>
+</tr>
+<tr>
+<td>Failed Precondition</td>
+<td>412</td>
+<td>Saldo insuficiente</td>
+</tr>
+<tr>
+<td>Server (inesperado)</td>
+<td>500</td>
+<td>Erro interno</td>
+</tr>
+</tbody></table>
+<h2>Logging</h2>
+<ul>
+<li>Logar: operation, userId, error code, message, stack, requestId</li>
+<li>NUNCA logar: passwords, tokens, secrets, full PII</li>
+<li>Levels: ERROR (falhas), WARN (recuperável), INFO (eventos chave)</li>
+</ul>
+<h2>Retry</h2>
+<ul>
+<li>Retentar apenas operações idempotentes com erros transientes (5xx, timeout)</li>
+<li>Nunca retentar 4xx ou erros de negócio</li>
+<li>Usar idempotencyKey nas entidades</li>
+</ul>
+
+</section>
+
+<section class="content hidden" id="page-testing">
+<h1>TSDTech — Testing Standards</h1>
+<h2>Philosophy</h2>
+<ul>
+<li>Testar comportamento, não implementação</li>
+<li>Cobertura crítica em Services (regras de negócio)</li>
+<li>Testes rápidos e confiáveis</li>
+</ul>
+<h2>Test Types</h2>
+<table>
+<thead>
+<tr>
+<th>Tipo</th>
+<th>Escopo</th>
+<th>Mocks</th>
+<th>Velocidade</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Unitário</strong></td>
+<td>Service isolado</td>
+<td>DAO/Repository mockado</td>
+<td>ms</td>
+</tr>
+<tr>
+<td><strong>Integração</strong></td>
+<td>Service + DAO real</td>
+<td>External APIs mockadas</td>
+<td>s</td>
+</tr>
+<tr>
+<td><strong>E2E</strong></td>
+<td>Fluxo completo API→DB</td>
+<td>Nenhum</td>
+<td>min</td>
+</tr>
+</tbody></table>
+<h2>Structure (AAA)</h2>
+<pre><code class="language-typescript">it(&#39;should reject split when amount exceeds available balance&#39;, () =&gt; {
+  const balance = new Decimal(1000);
+  const pendingBalance = new Decimal(-800);
+
+  const result = service.calculateAvailableBalance(balance, pendingBalance);
+
+  expect(result).toEqual(new Decimal(200));
+});
+</code></pre>
+<h2>Where to Focus</h2>
+<ol>
+<li><strong>Services</strong> — toda regra de negócio, cenários de erro, edge cases financeiros</li>
+<li><strong>DTO validation</strong> — class-validator cobre validação de input</li>
+<li><strong>DAO/Repository</strong> — apenas queries customizadas (herdado de base já é testado)</li>
+<li><strong>Controllers</strong> — mínimos (são thin, só delegam)</li>
+</ol>
+<h2>Mocking &amp; Data</h2>
+<ul>
+<li>Mockar externals (API Pinbank, Pub/Sub, DAOs)</li>
+<li>Nunca mockar a classe sob teste</li>
+<li>Usar factories de entidades com valores padrão</li>
+<li>Resetar estado entre testes</li>
+</ul>
+<h2>Financial Value Testing</h2>
+<pre><code class="language-typescript">// Sempre testar conversão cents ↔ Decimal
+it(&#39;should convert cents to decimal&#39;, () =&gt; {
+  const result = new Decimal(500).div(100);
+  expect(result.toNumber()).toBe(5);
+});
+
+// Edge cases
+it(&#39;should handle zero amount&#39;, () =&gt; { /* ... */ });
+it(&#39;should handle large amounts&#39;, () =&gt; { /* ... */ });
+</code></pre>
+
+</section>
+
+<section class="content hidden" id="page-deployment">
+<h1>TSDTech — Deployment Standards</h1>
+<h2>Philosophy</h2>
+<ul>
+<li>Terraform + Cloud Run (GCP) — infra como código</li>
+<li>Makefile para comandos padronizados</li>
+<li>Deploy progressivo: dev → hml → prod</li>
+</ul>
+<h2>Environments</h2>
+<table>
+<thead>
+<tr>
+<th>Ambiente</th>
+<th>Terraform Vars</th>
+<th>Propósito</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>dev</code></td>
+<td><code>dev.tfvars</code></td>
+<td>Desenvolvimento</td>
+</tr>
+<tr>
+<td><code>hml</code></td>
+<td><code>hml.tfvars</code></td>
+<td>Homologação / staging</td>
+</tr>
+<tr>
+<td><code>prod</code></td>
+<td><code>prod.tfvars</code></td>
+<td>Produção</td>
+</tr>
+</tbody></table>
+<h2>CI/CD Flow</h2>
+<pre><code>Code → Test → Build → Deploy (staged) → Verify
+</code></pre>
+<h3>Repositório de Infra</h3>
+<pre><code>infra-tsdtech/
+├── core/
+│   ├── Makefile              # plan + apply
+│   ├── envs/                 # env-specific vars
+│   │   ├── dev.tfvars
+│   │   ├── hml.tfvars
+│   │   └── prod.tfvars
+│   └── terraform/            # Cloud Run, Firestore, etc.
+├── load-balancers/
+├── queues/                   # Pub/Sub topics + subscriptions
+└── vpns/                     # VPN configs
+</code></pre>
+<h3>Comandos</h3>
+<pre><code class="language-bash"># Preview
+make plan ENV=dev
+make plan ENV=prod
+
+# Apply
+make apply ENV=dev
+make apply ENV=prod
+</code></pre>
+<h2>Zero-Downtime</h2>
+<ul>
+<li>Cloud Run gerencia scaling automático</li>
+<li>Health checks: <code>/health</code> (live), <code>/health/ready</code> (ready)</li>
+<li>Graceful shutdown nos services NestJS</li>
+</ul>
+<h2>Rollback</h2>
+<ul>
+<li>Cloud Run mantém versão anterior</li>
+<li>Reverter via <code>make apply</code> com tag anterior</li>
+<li>Database migrations devem ser backwards-compatible</li>
+</ul>
+<h2>Health &amp; Monitoring</h2>
+<p>Endpoints obrigatórios em todo microserviço:</p>
+<ul>
+<li><code>GET /health</code> — live</li>
+<li><code>GET /health/ready</code> — readiness</li>
+</ul>
+<p>Monitorar: latency, error rate, throughput, saturation via GCP Cloud Monitoring.</p>
+<h2>Incident Response</h2>
+<ul>
+<li>Detectar → Avaliar → Mitigar → Comunicar → Resolver → Post-mortem</li>
+<li>Alertas no GCP Monitoring por SLO breach</li>
+<li>Logs centralizados no GCP Cloud Logging com requestId para correlação</li>
+</ul>
+
+</section>
+
+<section class="content hidden" id="page-code-patterns">
+<h1>TSDTech — Code Patterns</h1>
+<p>Template completo para criar features seguindo DDD Anêmico. Cada camada com seu padrão específico. Use como referência ao implementar.</p>
+<hr>
+<h2>Índice</h2>
+<ul>
+<li><a href="#1-vis%C3%A3o-geral-do-fluxo">1. Visão Geral do Fluxo</a></li>
+<li><a href="#2-entity">2. Entity</a></li>
+<li><a href="#3-dao-firestore">3. DAO (Firestore)</a></li>
+<li><a href="#4-repository-postgresqlknex">4. Repository (PostgreSQL/Knex)</a></li>
+<li><a href="#5-request-dto">5. Request DTO</a></li>
+<li><a href="#6-response-dto">6. Response DTO</a></li>
+<li><a href="#7-service">7. Service</a></li>
+<li><a href="#8-controller">8. Controller</a></li>
+<li><a href="#9-module">9. Module</a></li>
+<li><a href="#10-feature-completa-exemplo">10. Feature Completa (Exemplo)</a></li>
+</ul>
+<hr>
+<h2>1. Visão Geral do Fluxo</h2>
+<pre><code>HTTP Request
+  → Controller (valida DTO, delega)
+  → Service (regras de négocio, chama DAOs/externals)
+  → DAO/Repository (CRUD no banco)
+  → Entity (modelo de domínio)
+  → Service (monta response DTO)
+  → Controller (retorna response)
+</code></pre>
+<h3>Regras de Ouro</h3>
+<table>
+<thead>
+<tr>
+<th>Camada</th>
+<th>Pode</th>
+<th>NÃO Pode</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Controller</td>
+<td>@Body, @Param, @Query, Guards, Swagger</td>
+<td>Regra de négocio, acesso a DAO</td>
+</tr>
+<tr>
+<td>Service</td>
+<td>Tudo de negócio, chamar DAOs/externals</td>
+<td>@Body, @Param, decorators HTTP</td>
+</tr>
+<tr>
+<td>DAO/Repository</td>
+<td>CRUD, queries, filtros</td>
+<td>Lógica de negócio, validacão</td>
+</tr>
+<tr>
+<td>Entity</td>
+<td>@JsonObject, @JsonProperty, constructor</td>
+<td>DAO, Swagger, persistência</td>
+</tr>
+<tr>
+<td>DTO</td>
+<td>class-validator, @ApiProperty</td>
+<td>@JsonObject, entity inheritance</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>2. Entity</h2>
+<h3>Base — EntityImmutable / EntityMutable</h3>
+<pre><code class="language-typescript">// src/core/common-models/immutable.entity.ts
+@JsonObject()
+export abstract class EntityImmutable {
+  @JsonProperty()
+  private id: string;
+
+  @JsonProperty({
+    beforeDeserialize: (p) =&gt; new Date(p).toISOString(),
+    beforeSerialize: (p) =&gt; p?.getTime(),
+  })
+  private createdAtUtc: Date;
+
+  constructor(params: { id?: string; createdAtUtc?: Date }) {
+    if (!params) return;
+    this.setId(params?.id);
+    this.createdAtUtc = params?.createdAtUtc ?? new Date();
+  }
+
+  public setId(id: string) {
+    this.id = id ?? crypto.randomUUID();
+  }
+
+  public getId(): string { return this.id; }
+  public getCreatedAtUtc(): Date { return this.createdAtUtc; }
+}
+</code></pre>
+<pre><code class="language-typescript">// src/core/common-models/mutable.entity.ts
+@JsonObject()
+export class EntityMutable extends EntityImmutable {
+  @JsonProperty({
+    beforeDeserialize: (p) =&gt; new Date(p).toISOString(),
+    beforeSerialize: (p) =&gt; p?.getTime(),
+  })
+  private updatedAtUtc?: Date;
+
+  constructor(params: { id?: string; createdAtUtc?: Date; updatedAtUtc?: Date }) {
+    super(params);
+    if (!params) return;
+    this.setUpdatedAtUtc(params?.updatedAtUtc);
+  }
+
+  public getUpdatedAtUtc(): Date { return this.updatedAtUtc; }
+  public setUpdatedAtUtc(d: Date) { this.updatedAtUtc = d; }
+  public update() { this.setUpdatedAtUtc(new Date()); }
+}
+</code></pre>
+<h3>Firestore Entity</h3>
+<pre><code class="language-typescript">// src/modules/api/&lt;feature&gt;/entities/&lt;entidade&gt;.entity.ts
+import { JsonObject, JsonProperty } from &#39;typescript-json-serializer&#39;;
+import { EntityMutable } from &#39;src/core/common-models/mutable.entity&#39;;
+import Decimal from &#39;decimal.js&#39;;
+import { DecimalJsonSerializer } from &#39;src/core/decorators/decimal.decorator&#39;;
+
+@JsonObject()
+export class MinhaEntidade extends EntityMutable {
+  @JsonProperty()
+  private nome: string;
+
+  @DecimalJsonSerializer()
+  private valor: Decimal;
+
+  @JsonProperty({ name: &#39;status_atual&#39; })
+  private statusAtual: string;
+
+  @JsonProperty()
+  private idempotencyKey: string;
+
+  constructor(p: {
+    id?: string;
+    nome: string;
+    valor: Decimal;
+    statusAtual: string;
+    idempotencyKey: string;
+    createdAtUtc?: Date;
+    updatedAtUtc?: Date;
+  }) {
+    super(p);
+    if (!p) return;
+    this.nome = p.nome;
+    this.valor = p.valor;
+    this.statusAtual = p.statusAtual;
+    this.idempotencyKey = p.idempotencyKey;
+  }
+
+  // ── Getters ──
+  getNome(): string { return this.nome; }
+  getValor(): Decimal { return this.valor; }
+  getStatusAtual(): string { return this.statusAtual; }
+  getIdempotencyKey(): string { return this.idempotencyKey; }
+
+  // ── Setters ──
+  setStatusAtual(s: string) { this.statusAtual = s; }
+}
+</code></pre>
+<h3>Regras da Entity</h3>
+<ul>
+<li><code>@JsonObject()</code> na classe + <code>@JsonProperty()</code> em cada campo <strong>privado</strong></li>
+<li>Campos privados com getters públicos (<code>getNome()</code>, <code>getValor()</code>)</li>
+<li>Valores financeiros: <code>@DecimalJsonSerializer()</code> com tipo <code>Decimal</code></li>
+<li>Construtor recebe objeto tipado com todos os campos</li>
+<li><code>super(p)</code> no início + <code>if (!p) return;</code> (obrigatório para serializacão)</li>
+<li>Timestamps serializados como Unix timestamp (<code>getTime()</code>) no Firestore</li>
+<li>NUNCA colocar Swagger, DAO, ou lógica de negócio aqui</li>
+</ul>
+<hr>
+<h2>3. DAO (Firestore)</h2>
+<h3>BaseDao (v2 — padrão atual)</h3>
+<pre><code class="language-typescript">// src/core/base/base.dao.ts
+export abstract class BaseDao&lt;T extends { getId(): string }&gt; {
+  protected abstract collectionName: string;
+
+  constructor(
+    @Inject(Firestore) protected readonly firestore: Firestore,
+    private readonly type: Type&lt;T&gt;,
+    private readonly readOnly: boolean = false,
+  ) {}
+}
+</code></pre>
+<h3>Métodos do BaseDao</h3>
+<table>
+<thead>
+<tr>
+<th>Método</th>
+<th>Assinatura</th>
+<th>Descrição</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>findAll</strong></td>
+<td><code>({ filterIdsAction?, queryFilterAction?, filters?, pagination? })</code></td>
+<td>Busca com filtro duplo (Firestore + in-memory) + paginação cursor</td>
+</tr>
+<tr>
+<td><strong>create</strong></td>
+<td><code>({ entities: T[], transaction?: WriteBatch })</code></td>
+<td><strong>Sempre batch</strong> — usa <code>batch.set()</code></td>
+</tr>
+<tr>
+<td><strong>update</strong></td>
+<td><code>({ entities: T[], transaction?: WriteBatch })</code></td>
+<td><strong>Sempre batch</strong> — usa <code>batch.update()</code></td>
+</tr>
+<tr>
+<td><strong>delete</strong></td>
+<td><code>({ ids: string[], transaction?: WriteBatch })</code></td>
+<td><strong>Sempre batch</strong> — usa <code>batch.delete()</code></td>
+</tr>
+</tbody></table>
+<h3>Como obter por ID</h3>
+<p><strong>Não existe <code>findOne(id)</code>.</strong> Use <code>findAll</code> com <code>filters.ids</code>:</p>
+<pre><code class="language-typescript">const { items } = await this.dao.findAll({ filters: { ids: [id] } });
+const entity = items[0]; // pode ser undefined
+</code></pre>
+<h3>Paginação</h3>
+<p>Cursor-based via <code>lastEvaluatedId</code>:</p>
+<pre><code class="language-typescript">const result = await this.dao.findAll({
+  filters: { ... },
+  pagination: new PaginationDto({ lastEvaluatedId: &#39;abc&#39;, limit: 20 }),
+});
+// result.items → T[]
+// result.nextEvaluatedId → string | undefined (para próxima página)
+</code></pre>
+<h3>Como implementar um DAO</h3>
+<pre><code class="language-typescript">// src/modules/api/&lt;feature&gt;/daos/&lt;entidade&gt;.dao.ts
+import { Injectable } from &#39;@nestjs/common&#39;;
+import { BaseDao } from &#39;src/core/base/base.dao&#39;;
+import { Firestore } from &#39;@google-cloud/firestore&#39;;
+import { PaginatedListDto } from &#39;src/core/dtos/paginated-list.dto&#39;;
+import { PaginationDto } from &#39;src/core/dtos/pagination.dto&#39;;
+import { FilterMinhaEntidadeDto } from &#39;../dto/filter-minha-entidade.dto&#39;;
+import { MinhaEntidade } from &#39;../entities/minha-entidade.entity&#39;;
+
+@Injectable()
+export class MinhaEntidadeDao extends BaseDao&lt;MinhaEntidade&gt; {
+  protected collectionName = &#39;minhas_entidades&#39;;
+
+  constructor(firestore: Firestore) {
+    super(firestore, MinhaEntidade);
+  }
+
+  async findAll(params: {
+    filters?: FilterMinhaEntidadeDto;
+    pagination?: PaginationDto;
+  }): Promise&lt;PaginatedListDto&lt;MinhaEntidade&gt;&gt; {
+    return super.findAll({
+      ...params,
+
+      // Filtro in-memory (pós-query) — para campos que não podem ir no where()
+      filterIdsAction: (entity) =&gt; {
+        if (params.filters?.organizationIds &amp;&amp;
+            !params.filters.organizationIds.includes(entity.getOrganizationId())) {
+          return false;
+        }
+        return true;
+      },
+
+      // Filtro Firestore (pré-query) — usa where() do Firestore
+      queryFilterAction: (query) =&gt; {
+        if (params.filters?.organizationIds) {
+          query = query.where(&#39;organizationId&#39;, &#39;in&#39;, params.filters.organizationIds);
+        }
+        if (params.filters?.statuses) {
+          query = query.where(&#39;status&#39;, &#39;in&#39;, params.filters.statuses);
+        }
+        return query;
+      },
+    });
+  }
+}
+</code></pre>
+<h3>Dual Filter: queryFilterAction vs filterIdsAction</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>queryFilterAction</th>
+<th>filterIdsAction</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Quando</strong></td>
+<td>Filters.ids não foi passado</td>
+<td>Sempre roda (também com ids)</td>
+</tr>
+<tr>
+<td><strong>Onde</strong></td>
+<td>Firestore <code>where()</code> (server-side)</td>
+<td>In-memory (client-side)</td>
+</tr>
+<tr>
+<td><strong>Pra que</strong></td>
+<td>Filtrar no banco (performance)</td>
+<td>Pós-filtro para campos não-indexados</td>
+</tr>
+<tr>
+<td><strong>Exemplo</strong></td>
+<td><code>query.where(&#39;status&#39;, &#39;in&#39;, statuses)</code></td>
+<td><code>entity.getNome().includes(searchTerm)</code></td>
+</tr>
+</tbody></table>
+<h3>Batch + Transaction</h3>
+<p><strong>Todas as operacões de escrita usam <code>WriteBatch</code>.</strong> O <code>transaction</code> é opcional — quando passado, o batch não é committado automaticamente, permitindo compor transacões multi-DAO:</p>
+<pre><code class="language-typescript">// Auto-commit (caso mais comum)
+await this.dao.create({ entities: [entity] });
+
+// Transacão compartilhada entre DAOs
+const batch = firestore.batch();
+await this.daoA.create({ entities: [a], transaction: batch });
+await this.daoB.create({ entities: [b], transaction: batch });
+await batch.commit();
+</code></pre>
+<hr>
+<h2>4. Repository (PostgreSQL/Knex)</h2>
+<pre><code class="language-typescript">// src/modules/api/&lt;feature&gt;/repositories/&lt;entidade&gt;.repository.ts
+import { Injectable } from &#39;@nestjs/common&#39;;
+import { Knex } from &#39;knex&#39;;
+import { BaseRepository } from &#39;src/core/services/base.repository&#39;;
+import { MinhaEntidade } from &#39;../entities/minha-entidade.entity&#39;;
+
+export interface MinhaEntidadeFilter {
+  ids?: string[];
+  organizationId?: string;
+  status?: string;
+}
+
+@Injectable()
+export class MinhaEntidadeRepository extends BaseRepository&lt;
+  MinhaEntidade,
+  MinhaEntidadeFilter
+&gt; {
+  protected tableName = &#39;minhas_entidades&#39;;
+
+  constructor(protected readonly knex: Knex) {
+    super(knex, MinhaEntidade);
+  }
+
+  findBy(query: Knex.QueryBuilder, filters?: MinhaEntidadeFilter): void {
+    if (filters?.ids?.length) {
+      query.whereIn(&#39;id&#39;, filters.ids);
+    }
+    if (filters?.organizationId) {
+      query.where(&#39;organization_id&#39;, filters.organizationId);
+    }
+    if (filters?.status) {
+      query.where(&#39;status&#39;, filters.status);
+    }
+  }
+}
+</code></pre>
+<hr>
+<h2>5. Request DTO</h2>
+<pre><code class="language-typescript">// src/modules/api/&lt;feature&gt;/dto/create-&lt;entidade&gt;.dto.ts
+import { ApiProperty } from &#39;@nestjs/swagger&#39;;
+import {
+  IsNotEmpty,
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsEnum,
+  MaxLength,
+  ArrayMaxSize,
+} from &#39;class-validator&#39;;
+
+export class CreateMinhaEntidadeDto {
+  @ApiProperty({ description: &#39;Nome da entidade&#39;, example: &#39;João Silva&#39; })
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(200)
+  nome: string;
+
+  @ApiProperty({ description: &#39;Valor em centavos&#39;, example: 1500 })
+  @IsNotEmpty()
+  @IsNumber()
+  valor: number; // ← centavos! Não Decimal
+
+  @ApiProperty({ description: &#39;Status&#39;, enum: [&#39;ACTIVE&#39;, &#39;INACTIVE&#39;], example: &#39;ACTIVE&#39; })
+  @IsOptional()
+  @IsEnum([&#39;ACTIVE&#39;, &#39;INACTIVE&#39;])
+  status?: string;
+}
+</code></pre>
+<pre><code class="language-typescript">// src/modules/api/&lt;feature&gt;/dto/filter-&lt;entidade&gt;.dto.ts
+import { ApiProperty } from &#39;@nestjs/swagger&#39;;
+import { IsOptional, IsArray, IsString } from &#39;class-validator&#39;;
+
+export class FilterMinhaEntidadeDto {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  ids?: string[];
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  organizationIds?: string[];
+}
+</code></pre>
+<hr>
+<h2>6. Response DTO</h2>
+<pre><code class="language-typescript">// src/modules/api/&lt;feature&gt;/dto/&lt;entidade&gt;-response.dto.ts
+import { ApiProperty } from &#39;@nestjs/swagger&#39;;
+
+export class MinhaEntidadeResponseDto {
+  @ApiProperty() id: string;
+  @ApiProperty() nome: string;
+  @ApiProperty({ description: &#39;Valor em centavos&#39;, example: 1500 }) valor: number;
+  @ApiProperty({ description: &#39;Data de criacão&#39; }) createdAt: Date;
+
+  static fromEntity(entity: MinhaEntidade): MinhaEntidadeResponseDto {
+    const dto = new MinhaEntidadeResponseDto();
+    dto.id = entity.getId();
+    dto.nome = entity.getNome();
+    dto.valor = entity.getValor().times(100).toNumber(); // Decimal → centavos
+    dto.createdAt = entity.getCreatedAtUtc();
+    return dto;
+  }
+}
+</code></pre>
+<hr>
+<h2>7. Service</h2>
+<h3>CREATE</h3>
+<pre><code class="language-typescript">async create(dto: CreateMinhaEntidadeDto): Promise&lt;MinhaEntidadeResponseDto&gt; {
+  await this.validateCreate(dto);
+
+  const valorDecimal = new Decimal(dto.valor).div(100);
+
+  const entity = new MinhaEntidade({
+    nome: dto.nome,
+    valor: valorDecimal,
+    statusAtual: dto.status ?? &#39;ACTIVE&#39;,
+    idempotencyKey: crypto.randomUUID(),
+  });
+
+  const [created] = await this.dao.create({ entities: [entity] });
+  return MinhaEntidadeResponseDto.fromEntity(created);
+}
+</code></pre>
+<h3>FIND BY ID (via findAll com filters.ids)</h3>
+<pre><code class="language-typescript">async findById(id: string): Promise&lt;MinhaEntidadeResponseDto&gt; {
+  const { items } = await this.dao.findAll({ filters: { ids: [id] } });
+  if (!items.length) {
+    throw HTTPError.NOT_FOUND({
+      message: &#39;Entidade não encontrada&#39;,
+      title: &#39;Not Found&#39;,
+    });
+  }
+  return MinhaEntidadeResponseDto.fromEntity(items[0]);
+}
+</code></pre>
+<h3>UPDATE</h3>
+<pre><code class="language-typescript">async update(id: string, dto: Partial&lt;CreateMinhaEntidadeDto&gt;): Promise&lt;MinhaEntidadeResponseDto&gt; {
+  const { items } = await this.dao.findAll({ filters: { ids: [id] } });
+  if (!items.length) {
+    throw HTTPError.NOT_FOUND({
+      message: &#39;Entidade não encontrada&#39;,
+      title: &#39;Not Found&#39;,
+    });
+  }
+
+  const entity = items[0];
+  if (dto.nome !== undefined) entity.setNome(dto.nome);
+  if (dto.valor !== undefined) entity.setValor(new Decimal(dto.valor).div(100));
+
+  const [updated] = await this.dao.update({ entities: [entity] });
+  return MinhaEntidadeResponseDto.fromEntity(updated);
+}
+</code></pre>
+<h3>Procedural Mutation (find → modify → update)</h3>
+<pre><code class="language-typescript">async desativar(id: string): Promise&lt;void&gt; {
+  const { items: [entity] } = await this.dao.findAll({ filters: { ids: [id] } });
+  if (!entity) throw HTTPError.NOT_FOUND({ message: &#39;Não encontrada&#39;, title: &#39;Not Found&#39; });
+
+  entity.setStatusAtual(&#39;INACTIVE&#39;);
+  await this.dao.update({ entities: [entity] });
+}
+</code></pre>
+<h3>DELETE</h3>
+<pre><code class="language-typescript">async delete(id: string): Promise&lt;void&gt; {
+  const { items } = await this.dao.findAll({ filters: { ids: [id] } });
+  if (!items.length) throw HTTPError.NOT_FOUND({ message: &#39;Não encontrada&#39;, title: &#39;Not Found&#39; });
+
+  await this.dao.delete({ ids: [id] });
+}
+</code></pre>
+<h3>CREATE com batch compartilhado</h3>
+<pre><code class="language-typescript">// Quando precisa atomicidade entre múltiplos DAOs
+async createComTransacao(dto: CreateDto): Promise&lt;ResponseDto&gt; {
+  const batch = this.firestore.batch(); // ou injetar WriteBatch
+
+  const entityA = new EntidadeA({ ... });
+  const entityB = new EntidadeB({ ... });
+
+  await this.daoA.create({ entities: [entityA], transaction: batch });
+  await this.daoB.create({ entities: [entityB], transaction: batch });
+
+  await batch.commit(); // commit manual
+  // ...
+}
+</code></pre>
+<hr>
+<h2>8. Controller</h2>
+<pre><code class="language-typescript">// src/modules/api/&lt;feature&gt;/controllers/&lt;feature&gt;.controller.ts
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from &#39;@nestjs/common&#39;;
+import { ApiResponse, ApiTags } from &#39;@nestjs/swagger&#39;;
+import { PaginatedListDto } from &#39;src/core/dtos/paginated-list.dto&#39;;
+import { PaginationDto } from &#39;src/core/dtos/pagination.dto&#39;;
+import { PinbankProtected } from &#39;src/core/guards/pinbank-protected/pinbank-protected.decorator&#39;;
+
+import { MinhaEntidadeService } from &#39;../&lt;feature&gt;.service&#39;;
+import { CreateMinhaEntidadeDto } from &#39;../dto/create-minha-entidade.dto&#39;;
+import { FilterMinhaEntidadeDto } from &#39;../dto/filter-minha-entidade.dto&#39;;
+import { MinhaEntidadeResponseDto } from &#39;../dto/minha-entidade-response.dto&#39;;
+
+@ApiTags(&#39;MinhaEntidade&#39;)
+@Controller(&#39;MinhaEntidade&#39;)
+export class MinhaEntidadeController {
+  constructor(private readonly service: MinhaEntidadeService) {}
+
+  @Post(&#39;Create&#39;)
+  @PinbankProtected({ encrypted: false })
+  @ApiResponse({ type: MinhaEntidadeResponseDto, status: 201 })
+  async create(@Body() dto: CreateMinhaEntidadeDto): Promise&lt;MinhaEntidadeResponseDto&gt; {
+    return this.service.create(dto);
+  }
+
+  @Get(&#39;Get/:id&#39;)
+  @PinbankProtected({ encrypted: false })
+  @ApiResponse({ type: MinhaEntidadeResponseDto })
+  async get(@Param(&#39;id&#39;) id: string): Promise&lt;MinhaEntidadeResponseDto&gt; {
+    return this.service.findById(id);
+  }
+
+  @Get(&#39;List&#39;)
+  @PinbankProtected({ encrypted: false })
+  @ApiResponse({ type: PaginatedListDto&lt;MinhaEntidadeResponseDto&gt; })
+  async list(
+    @Query() filters?: FilterMinhaEntidadeDto,
+    @Query() pagination?: PaginationDto,
+  ): Promise&lt;PaginatedListDto&lt;MinhaEntidadeResponseDto&gt;&gt; {
+    return this.service.findAll(filters, pagination);
+  }
+
+  @Put(&#39;Update/:id&#39;)
+  @PinbankProtected({ encrypted: false })
+  @ApiResponse({ type: MinhaEntidadeResponseDto })
+  async update(
+    @Param(&#39;id&#39;) id: string,
+    @Body() dto: CreateMinhaEntidadeDto,
+  ): Promise&lt;MinhaEntidadeResponseDto&gt; {
+    return this.service.update(id, dto);
+  }
+
+  @Delete(&#39;Delete/:id&#39;)
+  @PinbankProtected({ encrypted: false })
+  @ApiResponse({ status: 204 })
+  async delete(@Param(&#39;id&#39;) id: string): Promise&lt;void&gt; {
+    return this.service.delete(id);
+  }
+}
+</code></pre>
+<h3>Health Controller</h3>
+<pre><code class="language-typescript">@Controller()
+export class HealthController {
+  @Get(&#39;health&#39;)
+  health() { return { status: &#39;ok&#39;, timestamp: new Date().toISOString() }; }
+
+  @Get(&#39;health/ready&#39;)
+  ready() { return { status: &#39;ready&#39; }; }
+}
+</code></pre>
+<hr>
+<h2>9. Module</h2>
+<pre><code class="language-typescript">// src/modules/api/&lt;feature&gt;/&lt;feature&gt;.module.ts
+import { Module } from &#39;@nestjs/common&#39;;
+
+@Module({
+  imports: [],
+  controllers: [MinhaEntidadeController],
+  providers: [MinhaEntidadeService, MinhaEntidadeDao],
+  exports: [MinhaEntidadeService, MinhaEntidadeDao],
+})
+export class MinhaEntidadeModule {}
+</code></pre>
+<hr>
+<h2>10. Feature Completa (Exemplo)</h2>
+<pre><code>src/modules/api/produto/
+├── controllers/
+│   └── produto.controller.ts
+├── daos/
+│   └── produto.dao.ts
+├── dto/
+│   ├── create-produto.dto.ts
+│   ├── filter-produto.dto.ts
+│   └── produto-response.dto.ts
+├── entities/
+│   └── produto.entity.ts
+├── produto.service.ts
+└── produto.module.ts
+</code></pre>
+<h3>Fluxo de Implementacão</h3>
+<ol>
+<li><strong>Entity</strong> — estender EntityMutable, campos privados com getters, @DecimalJsonSerializer</li>
+<li><strong>DAO</strong> — estender BaseDao, implementar findAll com filterIdsAction + queryFilterAction</li>
+<li><strong>DTOs</strong> — CreateDto (class-validator), FilterDto (ids, organizationIds), ResponseDto (fromEntity)</li>
+<li><strong>Service</strong> — regras de négocio, validacão, conversão centavos↔Decimal, CRUD via DAO</li>
+<li><strong>Controller</strong> — thin, delegacão, @ApiTags, @ApiResponse, @PinbankProtected</li>
+<li><strong>Module</strong> — wiring, exports</li>
+</ol>
+<h3>Checklist de Feature</h3>
+<ul>
+<li><input disabled="" type="checkbox"> Entity com campos privados + getters públicos</li>
+<li><input disabled="" type="checkbox"> Entity usa <code>super(p) + if (!p) return</code> no constructor</li>
+<li><input disabled="" type="checkbox"> Valores financeiros com @DecimalJsonSerializer + Decimal</li>
+<li><input disabled="" type="checkbox"> DAO com findAll sobrescrito (filterIdsAction + queryFilterAction)</li>
+<li><input disabled="" type="checkbox"> DAO sem lógica de négocio</li>
+<li><input disabled="" type="checkbox"> Request DTO com class-validator + @ApiProperty (centavos como number)</li>
+<li><input disabled="" type="checkbox"> Response DTO com factory fromEntity() (Decimal → centavos)</li>
+<li><input disabled="" type="checkbox"> Service usa <code>findAll({ filters: { ids } })</code> para buscar por ID</li>
+<li><input disabled="" type="checkbox"> Service valida com HTTPError estático</li>
+<li><input disabled="" type="checkbox"> Create/Update/Delete usam batch (com ou sem transaction)</li>
+<li><input disabled="" type="checkbox"> Controller thin (só delega), sem lógica</li>
+<li><input disabled="" type="checkbox"> @ApiTags + @ApiResponse em todos endpoints</li>
+<li><input disabled="" type="checkbox"> Guard correto (health sem auth)</li>
+<li><input disabled="" type="checkbox"> Module com exports dos providers</li>
+</ul>
+
+</section>
+
+</main>
+
+<script>
+  function showPage(pageId) {
+    document.querySelectorAll('.main > .content').forEach(el => el.classList.add('hidden'));
+    const target = document.getElementById('page-' + pageId);
+    if (target) target.classList.remove('hidden');
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    const navItem = document.querySelector('.nav-item[data-page="' + pageId + '"]');
+    if (navItem) navItem.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    history.replaceState(null, '', pageId !== 'home' ? '#' + pageId : window.location.pathname);
+  }
+
+  function filterNav() {
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
+    const items = document.querySelectorAll('.nav-item');
+    const groups = document.querySelectorAll('.nav-group');
+    items.forEach(item => { const t = item.textContent.toLowerCase(); item.style.display = (!q || t.includes(q)) ? '' : 'none'; });
+    groups.forEach(g => {
+      let next = g.nextElementSibling;
+      let visible = false;
+      while (next && next.classList.contains('nav-item')) {
+        if (next.style.display !== 'none') visible = true;
+        next = next.nextElementSibling;
+      }
+      g.style.display = (!q || visible) ? '' : 'none';
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const hash = window.location.hash.replace('#', '');
+    if (hash && document.getElementById('page-' + hash)) {
+      showPage(hash);
+    } else {
+      document.querySelectorAll('.main > .content').forEach(el => el.classList.add('hidden'));
+      document.getElementById('page-home').classList.remove('hidden');
+    }
+  });
+  window.addEventListener('hashchange', function() {
+    const hash = window.location.hash.replace('#', '');
+    if (hash && document.getElementById('page-' + hash)) showPage(hash);
+  });
+</script>
+</body>
+</html>
